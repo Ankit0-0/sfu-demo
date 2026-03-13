@@ -3,6 +3,8 @@ import * as http from "http";
 import * as WebSocket from "ws";
 import { WebsocketConnection } from "./lib/ws";
 
+import logger from './lib/logger'
+
 const main = async () => {
   const app = express();
   const server = http.createServer(app);
@@ -11,10 +13,14 @@ const main = async () => {
   WebsocketConnection(websocket);
   
 
-  const port = process.env.PORT || 3000;
+  const port = process.env.PORT || 8000;
   server.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
-  });
+    logger.info({ port }, 'HTTP server listening');
+  })
+  .on('error', (err) => {
+    logger.error({err}, 'Http server failed to start');
+    process.exit(1);
+  })
 };
 
 export { main };

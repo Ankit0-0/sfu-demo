@@ -1,18 +1,23 @@
 import WebSocket from "ws";
 import { createWorker } from "./worker";
+import { createLogger } from "./logger";
+
+const log = createLogger({ module: 'ws' });
 
 let mediasoupRouter;
 const WebsocketConnection = async (websock: WebSocket.Server) => {
   try {
     mediasoupRouter = await createWorker();
+        log.info('Mediasoup router ready for WS layer');
   } catch (error) {
+    log.error({ error }, 'Failed to initialize Mediasoup');
     throw error;
   }
   websock.on("connection", (ws: WebSocket) => {
-    console.log("New WebSocket connection established.");
+    log.info("New WebSocket connection established.");
 
     ws.on("message", (message: string) => {
-      console.log(`Received message: ${message}`);
+      log.info(`Received message: ${message}`);
       ws.send(`Echo: ${message}`);
     });
   });
