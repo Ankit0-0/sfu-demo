@@ -1,7 +1,7 @@
 import * as mediasoup from "mediasoup";
 import { config } from "../configs/mediaSoup-config";
 import { Worker, Router } from "mediasoup/node/lib/types";
-import { createLogger } from "./logger";
+import { createLogger } from "./logger/logger";
 
 const log = createLogger({ module: "mediasoup" });
 

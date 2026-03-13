@@ -1,6 +1,6 @@
 import WebSocket from "ws";
 import { createWorker } from "./worker";
-import { createLogger } from "./logger";
+import { createLogger } from "./logger/logger";
 
 const log = createLogger({ module: 'ws' });
 

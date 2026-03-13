@@ -3,7 +3,7 @@ import * as http from "http";
 import * as WebSocket from "ws";
 import { WebsocketConnection } from "./lib/ws";
 
-import logger from './lib/logger'
+import logger from './lib/logger/logger'
 
 const main = async () => {
   const app = express();
