@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <title>Mediasoup Video App</title>
+  </head>
+  <body class="min-w-full min-h-full bg-neutral-950 text-neutral-100">
+    <!-- Top bar / title -->
+    <header
+      class="flex justify-center items-center w-full h-16 bg-black/80 mb-8"
+    >
+      <h1 class="text-lg font-semibold trac king-wide">Mediasoup Sample</h1>
+    </header>
+
+    <main class="mx-auto max-w-6xl px-4">
+      <!-- Video panels -->
+      <section class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Local preview -->
+        <div
+          class="my-1 px-1 w-full overflow-hidden sm:my-px sm:px-px md:my-0 md:px-0 lg:my-1 lg:px-1 xl:my-1 xl:px-1 lg:w-1/2"
+        >
+          <div class="mb-2 text-sm text-neutral-300">Local Preview</div>
+          <video
+            id="localVideo"
+            class="w-full rounded-md bg-neutral-900"
+            controls
+            autoplay
+            playsinline
+            muted
+          ></video>
+        </div>
+
+        <!-- Remote stream -->
+        <div
+          class="my-1 px-1 w-full overflow-hidden sm:my-px sm:px-px md:my-0 md:px-0 lg:my-1 lg:px-1 xl:my-1 xl:px-1 lg:w-1/2"
+        >
+          <div class="mb-2 text-sm text-neutral-300">Remote Stream</div>
+          <video
+            id="remoteVideo"
+            class="w-full rounded-md bg-neutral-900"
+            controls
+            autoplay
+            playsinline
+          ></video>
+        </div>
+      </section>
+
+      <!-- Controls -->
+      <section class="mt-6">
+        <div class="flex flex-wrap gap-6">
+          <!-- Webcam -->
+          <div class="flex flex-col gap-2 min-w-48">
+            <button
+              id="btn_webcam"
+              class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled
+              aria-describedby="webcam_status"
+            >
+              Webcam
+            </button>
+            <span id="webcam_status" class="text-xs text-neutral-400"></span>
+          </div>
+
+          <!-- Screen share -->
+          <div class="flex flex-col gap-2 min-w-48">
+            <button
+              id="btn_screen"
+              class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded disabled:opacity-50 disabled:cursor-not-allowed mt-1"
+              disabled
+              aria-describedby="screen_status"
+            >
+              Screen
+            </button>
+            <span id="screen_status" class="text-xs text-neutral-400"></span>
+          </div>
+
+          <!-- Subscribe (consume remote) -->
+          <div class="flex flex-col gap-2 min-w-48">
+            <button
+              id="btn_subscribe"
+              class="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded disabled:opacity-50 disabled:cursor-not-allowed mt-1"
+              disabled
+              aria-describedby="subscribe_status"
+            >
+              Subscribe
+            </button>
+            <span id="subscribe_status" class="text-xs text-neutral-400"></span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Connection / room info -->
+      <section class="mt-8">
+        <div class="grid gap-3 sm:grid-cols-2">
+          <label class="block">
+            <span class="text-sm text-neutral-300">Room ID</span>
+            <input
+              id="roomId"
+              type="text"
+              class="mt-1 w-full rounded bg-neutral-900 border border-neutral-800 px-3 py-2 text-sm outline-none focus:border-blue-600"
+              placeholder="room-1"
+            />
+          </label>
+          <label class="block">
+            <span class="text-sm text-neutral-300">Peer Name</span>
+            <input
+              id="peerName"
+              type="text"
+              class="mt-1 w-full rounded bg-neutral-900 border border-neutral-800 px-3 py-2 text-sm outline-none focus:border-blue-600"
+              placeholder="alice"
+            />
+          </label>
+        </div>
+
+        <div class="mt-4 flex flex-wrap gap-3">
+          <button
+            id="btn_connect"
+            class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 px-4 rounded"
+          >
+            Connect
+          </button>
+          <button
+            id="btn_disconnect"
+            class="bg-neutral-700 hover:bg-neutral-600 text-white font-semibold py-2 px-4 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled
+          >
+            Disconnect
+          </button>
+          <span
+            id="conn_status"
+            class="self-center text-xs text-neutral-400"
+          ></span>
+        </div>
+      </section>
+    </main>
+
+    <!-- Your bundled UI logic -->
+    <script src="./app-bundle.js"></script>
+  </body>
+</html>

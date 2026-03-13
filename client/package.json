@@ -1,0 +1,21 @@
+{
+  "name": "client",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "esbuild ./src/main.js --bundle --outfile=./src/app-bundle.js --platform=browser",
+    "start": "npm run build && live-server ./src"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "live-server": "^1.2.2",
+    "mediasoup-client": "^3.18.7"
+  },
+  "devDependencies": {
+    "esbuild": "^0.27.4"
+  }
+}
