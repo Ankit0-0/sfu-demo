@@ -29,6 +29,12 @@ const createWorker = async () => {
   });
 
   log.info({ pid: worker.pid }, "Mediasoup worker created");
+
+
+  const mediaCodacs = config.mediasoup.router.mediaCodecs;
+  const mediaSoupRouter = await worker.createRouter({ mediaCodecs: mediaCodacs });
+
+  return mediaSoupRouter;
 };
 
 export { createWorker };

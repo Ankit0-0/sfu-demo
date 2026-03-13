@@ -12,7 +12,6 @@ let btnSub,
   textConn,
   localVideo,
   remoteVideo,
-  device,
   producer,
   consumeTransport,
   userId,
@@ -23,7 +22,7 @@ let btnSub,
   consumerErrback;
 
 const websocketURL = "ws://localhost:8000/ws";
-let socket;
+let socket, device;
 
 document.addEventListener("DOMContentLoaded", () => {
   // Buttons
@@ -50,23 +49,76 @@ document.addEventListener("DOMContentLoaded", () => {
   console.log("✅ UI elements loaded");
 
   // Optional: enable connect button immediately
-//   btnConnect.disabled = false;
+  //   btnConnect.disabled = false;
 
   btnCam.addEventListener("click", console.log("cam btn clicked"));
   btnScreen.addEventListener("click", console.log("clicked publish screen"));
   btnSub.addEventListener("click", console.log("sub btn clicked"));
 });
 
-
 const connect = () => {
-    socket = new WebSocket(websocketURL);
-    socket.onopen = () => {
-        const msg = {
-            type: "getRouterRtpCapabilities"
-        }
-        const resp = JSON.stringify(msg);
-        socket.send(resp);
-    }
-}
+  socket = new WebSocket(websocketURL);
+  socket.onopen = () => {
+    const msg = {
+      type: "getRouterRtpCapabilities",
+    };
+    const resp = JSON.stringify(msg);
+    socket.send(resp);
+  };
 
-connect()
+  socket.onmessage = (event) => {
+    const jsonValidation = IsJsonString(message);
+
+    if (!jsonValidation) {
+      log.error("Received invalid JSON message");
+      return;
+    }
+
+    let resp = JSON.parse(event.data);
+
+    switch (resp.type) {
+      case "routerRtpCapabilities":
+        onRouterRtpCapabilities(resp.data);
+        break;
+      default:
+        console.log(`Unknown message type: ${resp.type}`);
+        break;
+    }
+  };
+
+  const onRouterRtpCapabilities = (data) => {
+    loadDevice(data)      .then(() => {
+        console.log("Device loaded successfully");
+        // Enable UI buttons here 
+        btnCam.disabled = false;
+        btnScreen.disabled = false;
+
+      })
+      .catch((error) => {
+        console.error("Error loading device:", error);
+      });
+  };
+
+  const loadDevice = async (routerRtpCapabilities) => {
+    try {
+      device = new mediasoup.Device();
+    } catch (error) {
+      if (error.name === "UnsupportedError")
+        console.error("Browser not supported for mediasoup");
+      else console.error("Error loading device:", error);
+    }
+
+    await device.load({ routerRtpCapabilities });
+  };
+
+  const IsJsonString = (str) => {
+    try {
+      JSON.parse(str);
+    } catch (error) {
+      return false;
+    }
+    return true;
+  };
+};
+
+connect();
