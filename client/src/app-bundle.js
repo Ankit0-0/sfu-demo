@@ -975,25 +975,25 @@
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.InvalidStateError = exports.UnsupportedError = void 0;
       var UnsupportedError = class _UnsupportedError extends Error {
-        constructor(message2) {
-          super(message2);
+        constructor(message) {
+          super(message);
           this.name = "UnsupportedError";
           if (Error.hasOwnProperty("captureStackTrace")) {
             Error.captureStackTrace(this, _UnsupportedError);
           } else {
-            this.stack = new Error(message2).stack;
+            this.stack = new Error(message).stack;
           }
         }
       };
       exports.UnsupportedError = UnsupportedError;
       var InvalidStateError = class _InvalidStateError extends Error {
-        constructor(message2) {
-          super(message2);
+        constructor(message) {
+          super(message);
           this.name = "InvalidStateError";
           if (Error.hasOwnProperty("captureStackTrace")) {
             Error.captureStackTrace(this, _InvalidStateError);
           } else {
-            this.stack = new Error(message2).stack;
+            this.stack = new Error(message).stack;
           }
         }
       };
@@ -3212,8 +3212,8 @@
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.AwaitQueueRemovedTaskError = exports.AwaitQueueStoppedError = void 0;
       var AwaitQueueStoppedError = class _AwaitQueueStoppedError extends Error {
-        constructor(message2) {
-          super(message2 ?? "queue stopped");
+        constructor(message) {
+          super(message ?? "queue stopped");
           this.name = "AwaitQueueStoppedError";
           if (typeof Error.captureStackTrace === "function") {
             Error.captureStackTrace(this, _AwaitQueueStoppedError);
@@ -3222,8 +3222,8 @@
       };
       exports.AwaitQueueStoppedError = AwaitQueueStoppedError;
       var AwaitQueueRemovedTaskError = class _AwaitQueueRemovedTaskError extends Error {
-        constructor(message2) {
-          super(message2 ?? "queue task removed");
+        constructor(message) {
+          super(message ?? "queue task removed");
           this.name = "AwaitQueueRemovedTaskError";
           if (typeof Error.captureStackTrace === "function") {
             Error.captureStackTrace(this, _AwaitQueueRemovedTaskError);
@@ -12850,12 +12850,15 @@
       var btnScreen;
       var btnConnect;
       var btnDisconnect;
+      var textPublish;
       var textWebcam;
       var textScreen;
       var textSubscribe;
       var textConn;
       var localVideo;
       var remoteVideo;
+      var producer;
+      var isWebcam = true;
       var websocketURL = "ws://localhost:8000/ws";
       var socket;
       var device;
@@ -12874,9 +12877,9 @@
         roomIdInput = document.getElementById("roomId");
         peerNameInput = document.getElementById("peerName");
         console.log("\u2705 UI elements loaded");
-        btnCam.addEventListener("click", console.log("cam btn clicked"));
-        btnScreen.addEventListener("click", console.log("clicked publish screen"));
-        btnSub.addEventListener("click", console.log("sub btn clicked"));
+        btnCam.addEventListener("click", publish);
+        btnScreen.addEventListener("click", publish);
+        btnSub.addEventListener("click", () => console.log("sub btn clicked"));
       });
       var connect = () => {
         socket = new WebSocket(websocketURL);
@@ -12888,7 +12891,7 @@
           socket.send(resp);
         };
         socket.onmessage = (event) => {
-          const jsonValidation = IsJsonString(message);
+          const jsonValidation = IsJsonString(event.data);
           if (!jsonValidation) {
             log.error("Received invalid JSON message");
             return;
@@ -12898,40 +12901,140 @@
             case "routerRtpCapabilities":
               onRouterRtpCapabilities(resp.data);
               break;
+            case "producerTransportCreated":
+              onProducerTransportCreated(resp.data);
+              break;
+            case "producerTransportCreationFailed":
+              onProducerTransportCreationFailed(resp.data);
+              break;
             default:
               console.log(`Unknown message type: ${resp.type}`);
               break;
           }
         };
-        const onRouterRtpCapabilities = (data) => {
-          loadDevice(data).then(() => {
-            console.log("Device loaded successfully");
-            btnCam.disabled = false;
-            btnScreen.disabled = false;
-          }).catch((error) => {
-            console.error("Error loading device:", error);
-          });
-        };
-        const loadDevice = async (routerRtpCapabilities) => {
-          try {
-            device = new mediasoup.Device();
-          } catch (error) {
-            if (error.name === "UnsupportedError")
-              console.error("Browser not supported for mediasoup");
-            else console.error("Error loading device:", error);
-          }
-          await device.load({ routerRtpCapabilities });
-        };
-        const IsJsonString = (str) => {
-          try {
-            JSON.parse(str);
-          } catch (error) {
-            return false;
-          }
-          return true;
-        };
       };
       connect();
+      var onRouterRtpCapabilities = (data) => {
+        loadDevice(data).then(() => {
+          console.log("Device loaded successfully");
+          btnCam.disabled = false;
+          btnScreen.disabled = false;
+        }).catch((error) => {
+          console.error("Error loading device:", error);
+        });
+      };
+      var onProducerTransportCreated = async (event) => {
+        if (event.error) {
+          console.error("Producer transport creation failed:", event.error);
+          return;
+        }
+        const transport = device.createSendTransport(event.data);
+        transport.on("connect", async ({ dtlsParameters }, callback, errback) => {
+          const message = {
+            type: "connectProducerTransport",
+            dtlsParameters
+          };
+          const resp = JSON.stringify(message);
+          socket.send(resp);
+          socket.addEventListener("producerTransportConnected", (event2) => {
+            callback();
+          });
+        });
+        transport.on(
+          "produce",
+          async ({ kind, rtpParameters }, callback, errback) => {
+            const message = {
+              type: "produce",
+              kind,
+              rtpParameters
+            };
+            const resp = JSON.stringify(message);
+            socket.send(resp);
+            socket.addEventListener("produced", (event2) => {
+              callback(resp.data.id);
+            });
+          }
+        );
+        transport.on("connectionstatechange", (state) => {
+          switch (state) {
+            case "connecting":
+              textPublish.innerHTML = "Publishing... (connecting)";
+              break;
+            case "connected":
+              localVideo.srcObject = stream;
+              textPublish.innerHTML = "published... (connected)";
+              break;
+            case "failed":
+              textPublish.innerHTML = "Publishing failed... (failed)";
+              transport.close();
+              break;
+          }
+        });
+        let stream;
+        try {
+          stream = await getUserMedia();
+          const track = stream.getVideoTracks()[0];
+          const params = { track };
+          producer = await transport.produce(params);
+        } catch (error) {
+          console.error("Error producing media:", error);
+          textPublish.innerHTML = "Publishing failed... (error)";
+        }
+      };
+      var onProducerTransportCreationFailed = (event) => {
+        console.error("Producer transport creation failed:", event.error);
+      };
+      var loadDevice = async (routerRtpCapabilities) => {
+        try {
+          device = new mediasoup.Device();
+        } catch (error) {
+          if (error.name === "UnsupportedError")
+            console.error("Browser not supported for mediasoup");
+          else console.error("Error loading device:", error);
+        }
+        await device.load({ routerRtpCapabilities });
+      };
+      var publish = (event) => {
+        isWebcam = event.target.id === "btn_webcam";
+        textPublish = isWebcam ? textWebcam : textScreen;
+        btnScreen.disabled = true;
+        btnCam.disabled = true;
+        const message = {
+          type: "createProducerTransport",
+          forceTcp: false,
+          rtpCapabilities: device.rtpCapabilities
+        };
+        const resp = JSON.stringify(message);
+        socket.send(resp);
+      };
+      var IsJsonString = (str) => {
+        try {
+          JSON.parse(str);
+        } catch (error) {
+          return false;
+        }
+        return true;
+      };
+      var getUserMedia = async () => {
+        if (!device.canProduce("video")) {
+          console.error("Cannot produce video");
+          return;
+        }
+        let stream;
+        try {
+          stream = isWebcam ? await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: true
+          }) : await navigator.mediaDevices.getDisplayMedia({
+            video: true,
+            audio: true
+          });
+        } catch (error) {
+          console.error("Error accessing media devices:", error);
+          throw error;
+        }
+        return stream;
+      };
     }
   });
   require_main();

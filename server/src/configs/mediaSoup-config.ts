@@ -42,6 +42,8 @@
             announcedIp: "127.0.0.1", // replace with public IP
           },
         ] as TransportListenInfo[],
+        initialAvailableOutgoingBitrate: 1000000,
+        maxIncomingBitrate: 1500000,
       },
     },
   } as const;

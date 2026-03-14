@@ -6,6 +6,7 @@ let btnSub,
   btnScreen,
   btnConnect,
   btnDisconnect,
+  textPublish,
   textWebcam,
   textScreen,
   textSubscribe,
@@ -51,9 +52,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // Optional: enable connect button immediately
   //   btnConnect.disabled = false;
 
-  btnCam.addEventListener("click", console.log("cam btn clicked"));
-  btnScreen.addEventListener("click", console.log("clicked publish screen"));
-  btnSub.addEventListener("click", console.log("sub btn clicked"));
+  btnCam.addEventListener("click", publish);
+  btnScreen.addEventListener("click", publish);
+  btnSub.addEventListener("click", () => console.log("sub btn clicked"));
 });
 
 const connect = () => {
@@ -67,7 +68,7 @@ const connect = () => {
   };
 
   socket.onmessage = (event) => {
-    const jsonValidation = IsJsonString(message);
+    const jsonValidation = IsJsonString(event.data);
 
     if (!jsonValidation) {
       log.error("Received invalid JSON message");
@@ -80,45 +81,165 @@ const connect = () => {
       case "routerRtpCapabilities":
         onRouterRtpCapabilities(resp.data);
         break;
+      case "producerTransportCreated":
+        onProducerTransportCreated(resp.data);
+        break;
+      case "producerTransportCreationFailed":
+        onProducerTransportCreationFailed(resp.data);
+        break;
       default:
         console.log(`Unknown message type: ${resp.type}`);
         break;
     }
   };
-
-  const onRouterRtpCapabilities = (data) => {
-    loadDevice(data)      .then(() => {
-        console.log("Device loaded successfully");
-        // Enable UI buttons here 
-        btnCam.disabled = false;
-        btnScreen.disabled = false;
-
-      })
-      .catch((error) => {
-        console.error("Error loading device:", error);
-      });
-  };
-
-  const loadDevice = async (routerRtpCapabilities) => {
-    try {
-      device = new mediasoup.Device();
-    } catch (error) {
-      if (error.name === "UnsupportedError")
-        console.error("Browser not supported for mediasoup");
-      else console.error("Error loading device:", error);
-    }
-
-    await device.load({ routerRtpCapabilities });
-  };
-
-  const IsJsonString = (str) => {
-    try {
-      JSON.parse(str);
-    } catch (error) {
-      return false;
-    }
-    return true;
-  };
 };
 
 connect();
+
+const onRouterRtpCapabilities = (data) => {
+  loadDevice(data)
+    .then(() => {
+      console.log("Device loaded successfully");
+      // Enable UI buttons here
+      btnCam.disabled = false;
+      btnScreen.disabled = false;
+    })
+    .catch((error) => {
+      console.error("Error loading device:", error);
+    });
+};
+
+const onProducerTransportCreated = async (event) => {
+  if (event.error) {
+    console.error("Producer transport creation failed:", event.error);
+    return;
+  }
+
+  const transport = device.createSendTransport(event.data);
+
+  transport.on("connect", async ({ dtlsParameters }, callback, errback) => {
+    const message = {
+      type: "connectProducerTransport",
+      dtlsParameters,
+    };
+
+    const resp = JSON.stringify(message);
+    socket.send(resp);
+    socket.addEventListener("producerTransportConnected", (event) => {
+      callback();
+    });
+  });
+
+  // begin transport on producer
+  transport.on(
+    "produce",
+    async ({ kind, rtpParameters }, callback, errback) => {
+      const message = {
+        type: "produce",
+        kind,
+        rtpParameters,
+      };
+      const resp = JSON.stringify(message);
+      socket.send(resp);
+
+      socket.addEventListener("produced", (event) => {
+        // published
+        callback(resp.data.id);
+      });
+    },
+  );
+
+  // end transport producer
+  // connection state change begin
+  transport.on("connectionstatechange", (state) => {
+    switch (state) {
+      case "connecting":
+        textPublish.innerHTML = "Publishing... (connecting)";
+        break;
+      case "connected":
+        localVideo.srcObject = stream;
+        textPublish.innerHTML = "published... (connected)";
+        break;
+      case "failed":
+        textPublish.innerHTML = "Publishing failed... (failed)";
+        transport.close();
+        break;
+    }
+  });
+
+  // connection state change end
+  let stream;
+  try {
+    stream = await getUserMedia();
+    const track = stream.getVideoTracks()[0];
+    const params = { track };
+    producer = await transport.produce(params);
+  } catch (error) {
+    console.error("Error producing media:", error);
+    textPublish.innerHTML = "Publishing failed... (error)";
+  }
+};
+
+const onProducerTransportCreationFailed = (event) => {
+  console.error("Producer transport creation failed:", event.error);
+};
+
+const loadDevice = async (routerRtpCapabilities) => {
+  try {
+    device = new mediasoup.Device();
+  } catch (error) {
+    if (error.name === "UnsupportedError")
+      console.error("Browser not supported for mediasoup");
+    else console.error("Error loading device:", error);
+  }
+
+  await device.load({ routerRtpCapabilities });
+};
+
+const publish = (event) => {
+  isWebcam = event.target.id === "btn_webcam";
+  textPublish = isWebcam ? textWebcam : textScreen;
+  btnScreen.disabled = true;
+  btnCam.disabled = true;
+
+  const message = {
+    type: "createProducerTransport",
+    forceTcp: false,
+    rtpCapabilities: device.rtpCapabilities,
+  };
+
+  const resp = JSON.stringify(message);
+  socket.send(resp);
+};
+
+const IsJsonString = (str) => {
+  try {
+    JSON.parse(str);
+  } catch (error) {
+    return false;
+  }
+  return true;
+};
+
+const getUserMedia = async () => {
+  if (!device.canProduce("video")) {
+    console.error("Cannot produce video");
+    return;
+  }
+  let stream;
+  try {
+    stream = isWebcam
+      ? await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: true,
+        })
+      : await navigator.mediaDevices.getDisplayMedia({
+          video: true,
+          audio: true,
+        });
+  } catch (error) {
+    console.error("Error accessing media devices:", error);
+    throw error;
+  }
+  return stream;
+};
