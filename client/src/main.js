@@ -13,14 +13,9 @@ let btnSub,
   textConn,
   localVideo,
   remoteVideo,
-  producer,
   consumeTransport,
-  userId,
   isWebcam = true,
-  produceCallback,
-  produceErrback,
-  consumerCallback,
-  consumerErrback;
+  remoteStream;
 
 const websocketURL = "ws://localhost:8000/ws";
 let socket, device;
@@ -44,8 +39,8 @@ document.addEventListener("DOMContentLoaded", () => {
   remoteVideo = document.getElementById("remoteVideo");
 
   // Inputs
-  roomIdInput = document.getElementById("roomId");
-  peerNameInput = document.getElementById("peerName");
+  // roomIdInput = document.getElementById("roomId");
+  // peerNameInput = document.getElementById("peerName");
 
   console.log("✅ UI elements loaded");
 
@@ -54,7 +49,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   btnCam.addEventListener("click", publish);
   btnScreen.addEventListener("click", publish);
-  btnSub.addEventListener("click", () => console.log("sub btn clicked"));
+  btnSub.addEventListener("click", subscribe);
 });
 
 const connect = () => {
@@ -87,6 +82,14 @@ const connect = () => {
       case "producerTransportCreationFailed":
         onProducerTransportCreationFailed(resp.data);
         break;
+      case "consumerTransportCreated":
+        onConsumerTransportCreated(resp);
+        break;
+      case "subscribed":
+        onSubscribed(resp);
+        break;
+      case "resumed":
+        console.log(resp.data, "resumed");
       default:
         console.log(`Unknown message type: ${resp.type}`);
         break;
@@ -115,7 +118,7 @@ const onProducerTransportCreated = async (event) => {
     return;
   }
 
-  const transport = device.createSendTransport(event.data);
+  const transport = device.createSendTransport(event);
 
   transport.on("connect", async ({ dtlsParameters }, callback, errback) => {
     const message = {
@@ -125,9 +128,23 @@ const onProducerTransportCreated = async (event) => {
 
     const resp = JSON.stringify(message);
     socket.send(resp);
-    socket.addEventListener("producerTransportConnected", (event) => {
-      callback();
+    socket.addEventListener("message", (event) => {
+      console.log("Received message for connectProducerTransport:", event.data);
+      const jsonValidation = IsJsonString(event.data);
+
+      if (!jsonValidation) {
+        log.error("Received invalid JSON message");
+        return;
+      }
+
+      let resp = JSON.parse(event.data);
+      
+      if (resp.type == "producerTransportConnected") { // producerConnected
+        console.log("Producer transport connected successfully");
+        callback();
+      }
     });
+    // callback();
   });
 
   // begin transport on producer
@@ -157,7 +174,6 @@ const onProducerTransportCreated = async (event) => {
         textPublish.innerHTML = "Publishing... (connecting)";
         break;
       case "connected":
-        localVideo.srcObject = stream;
         textPublish.innerHTML = "published... (connected)";
         break;
       case "failed":
@@ -171,8 +187,14 @@ const onProducerTransportCreated = async (event) => {
   let stream;
   try {
     stream = await getUserMedia();
+    localVideo.srcObject = stream;
     const track = stream.getVideoTracks()[0];
     const params = { track };
+
+    console.log("STREAM:", stream);
+    console.log("TRACKS:", stream.getTracks());
+
+    await localVideo.play().catch((e) => console.error("Play error:", e));
     producer = await transport.produce(params);
   } catch (error) {
     console.error("Error producing media:", error);
@@ -182,6 +204,98 @@ const onProducerTransportCreated = async (event) => {
 
 const onProducerTransportCreationFailed = (event) => {
   console.error("Producer transport creation failed:", event.error);
+};
+
+const onConsumerTransportCreated = (event) => {
+  if (event.error) {
+    console.error("Consumer transport creation failed:", event.error);
+    return;
+  }
+
+  const transport = device.createRecvTransport(event.data);
+  transport.on("connect", async ({ dtlsParameters }, callback, errback) => {
+    const message = {
+      type: "connectConsumerTransport",
+      dtlsParameters,
+      transportId: transport.id,
+    };
+
+    const resp = JSON.stringify(message);
+    socket.send(resp);
+
+    socket.addEventListener("message", (event) => {
+      console.log("Received message for consumer Connected:", event.data);
+      const jsonValidation = IsJsonString(event.data);
+
+      if (!jsonValidation) {
+        log.error("Received invalid JSON message");
+        return;
+      }
+
+      let resp = JSON.parse(event.data);
+      btnSub.disabled = false;
+
+      if (resp.type === "consumerConnected") {
+        console.log("Consumer transport connected successfully");
+        callback();
+      }
+    });
+  });
+
+  transport.on("connectionstatechange", (state) => {
+    switch (state) {
+      case "connecting":
+        textSubscribe.innerHTML = "Subscribing";
+        break;
+      case "connected":
+        remoteVideo.srcObject = remoteStream;
+        btnSub.disabled = false;
+        const msg = {
+          type: "resume",
+        };
+        const resp = JSON.stringify(msg);
+        socket.send(resp);
+        textSubscribe.innerHTML = "subscribed";
+        break;
+      case "failed":
+        transport.close();
+        textSubscribe.innerHTML = "failed";
+        btnSub.disabled = false;
+        break;
+    }
+  });
+
+  consumeTransport = transport;
+
+  const stream = consume(transport); // consumer
+};
+
+const consume = async (transport) => {
+  const { rtpCapabilities } = device;
+  const msg = {
+    type: "consume",
+    rtpCapabilities,
+  };
+  const message = JSON.stringify(msg);
+
+  socket.send(message);
+};
+
+const onSubscribed = async (event) => {
+  const data = ({ producerId, id, kind, rtpParameters } = event.data);
+
+  let codecOptions = {};
+  const consumer = await consumeTransport.consume({
+    id,
+    producerId,
+    kind,
+    rtpParameters,
+    codecOptions,
+  });
+  const stream = new MediaStream();
+  stream.addTrack(consumer.track);
+
+  remoteStream = stream;
 };
 
 const loadDevice = async (routerRtpCapabilities) => {
@@ -212,6 +326,19 @@ const publish = (event) => {
   socket.send(resp);
 };
 
+const subscribe = () => {
+  btnSub.disabled = true;
+
+  const msg = {
+    type: "createConsumerTransport",
+    forceTcp: false,
+    // rtpCapabilities: device.rtpCapabilities,
+  };
+
+  const resp = JSON.stringify(msg);
+  socket.send(resp);
+};
+
 const IsJsonString = (str) => {
   try {
     JSON.parse(str);
@@ -231,11 +358,11 @@ const getUserMedia = async () => {
     stream = isWebcam
       ? await navigator.mediaDevices.getUserMedia({
           video: true,
-          audio: true,
+          audio: false,
         })
       : await navigator.mediaDevices.getDisplayMedia({
           video: true,
-          audio: true,
+          audio: false,
         });
   } catch (error) {
     console.error("Error accessing media devices:", error);

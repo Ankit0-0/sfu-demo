@@ -2204,8 +2204,8 @@
       function getSendRtpCapabilities(extendedRtpCapabilities) {
         return getRtpCapabilities({ direction: "sendonly", extendedRtpCapabilities });
       }
-      function getSendingRtpParameters(kind, extendedRtpCapabilities) {
-        const rtpParameters = {
+      function getSendingRtpParameters(kind2, extendedRtpCapabilities) {
+        const rtpParameters2 = {
           mid: void 0,
           codecs: [],
           headerExtensions: [],
@@ -2213,7 +2213,7 @@
           rtcp: {}
         };
         for (const extendedCodec of extendedRtpCapabilities.codecs) {
-          if (extendedCodec.kind !== kind) {
+          if (extendedCodec.kind !== kind2) {
             continue;
           }
           const codec = {
@@ -2224,7 +2224,7 @@
             parameters: extendedCodec.localParameters,
             rtcpFeedback: extendedCodec.rtcpFeedback
           };
-          rtpParameters.codecs.push(codec);
+          rtpParameters2.codecs.push(codec);
           if (extendedCodec.localRtxPayloadType) {
             const rtxCodec = {
               mimeType: `${extendedCodec.kind}/rtx`,
@@ -2235,11 +2235,11 @@
               },
               rtcpFeedback: []
             };
-            rtpParameters.codecs.push(rtxCodec);
+            rtpParameters2.codecs.push(rtxCodec);
           }
         }
         for (const extendedExtension of extendedRtpCapabilities.headerExtensions) {
-          if (extendedExtension.kind && extendedExtension.kind !== kind || extendedExtension.direction !== "sendrecv" && extendedExtension.direction !== "sendonly") {
+          if (extendedExtension.kind && extendedExtension.kind !== kind2 || extendedExtension.direction !== "sendrecv" && extendedExtension.direction !== "sendonly") {
             continue;
           }
           const ext = {
@@ -2248,12 +2248,12 @@
             encrypt: extendedExtension.encrypt,
             parameters: {}
           };
-          rtpParameters.headerExtensions.push(ext);
+          rtpParameters2.headerExtensions.push(ext);
         }
-        return rtpParameters;
+        return rtpParameters2;
       }
-      function getSendingRemoteRtpParameters(kind, extendedRtpCapabilities) {
-        const rtpParameters = {
+      function getSendingRemoteRtpParameters(kind2, extendedRtpCapabilities) {
+        const rtpParameters2 = {
           mid: void 0,
           codecs: [],
           headerExtensions: [],
@@ -2261,7 +2261,7 @@
           rtcp: {}
         };
         for (const extendedCodec of extendedRtpCapabilities.codecs) {
-          if (extendedCodec.kind !== kind) {
+          if (extendedCodec.kind !== kind2) {
             continue;
           }
           const codec = {
@@ -2272,7 +2272,7 @@
             parameters: extendedCodec.remoteParameters,
             rtcpFeedback: extendedCodec.rtcpFeedback
           };
-          rtpParameters.codecs.push(codec);
+          rtpParameters2.codecs.push(codec);
           if (extendedCodec.localRtxPayloadType) {
             const rtxCodec = {
               mimeType: `${extendedCodec.kind}/rtx`,
@@ -2283,11 +2283,11 @@
               },
               rtcpFeedback: []
             };
-            rtpParameters.codecs.push(rtxCodec);
+            rtpParameters2.codecs.push(rtxCodec);
           }
         }
         for (const extendedExtension of extendedRtpCapabilities.headerExtensions) {
-          if (extendedExtension.kind && extendedExtension.kind !== kind || extendedExtension.direction !== "sendrecv" && extendedExtension.direction !== "sendonly") {
+          if (extendedExtension.kind && extendedExtension.kind !== kind2 || extendedExtension.direction !== "sendrecv" && extendedExtension.direction !== "sendonly") {
             continue;
           }
           const ext = {
@@ -2296,22 +2296,22 @@
             encrypt: extendedExtension.encrypt,
             parameters: {}
           };
-          rtpParameters.headerExtensions.push(ext);
+          rtpParameters2.headerExtensions.push(ext);
         }
-        if (rtpParameters.headerExtensions.some((ext) => ext.uri === "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01")) {
-          for (const codec of rtpParameters.codecs) {
+        if (rtpParameters2.headerExtensions.some((ext) => ext.uri === "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01")) {
+          for (const codec of rtpParameters2.codecs) {
             codec.rtcpFeedback = (codec.rtcpFeedback ?? []).filter((fb) => fb.type !== "goog-remb");
           }
-        } else if (rtpParameters.headerExtensions.some((ext) => ext.uri === "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time")) {
-          for (const codec of rtpParameters.codecs) {
+        } else if (rtpParameters2.headerExtensions.some((ext) => ext.uri === "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time")) {
+          for (const codec of rtpParameters2.codecs) {
             codec.rtcpFeedback = (codec.rtcpFeedback ?? []).filter((fb) => fb.type !== "transport-cc");
           }
         } else {
-          for (const codec of rtpParameters.codecs) {
+          for (const codec of rtpParameters2.codecs) {
             codec.rtcpFeedback = (codec.rtcpFeedback ?? []).filter((fb) => fb.type !== "transport-cc" && fb.type !== "goog-remb");
           }
         }
-        return rtpParameters;
+        return rtpParameters2;
       }
       function reduceCodecs(codecs, capCodec) {
         const filteredCodecs = [];
@@ -2339,27 +2339,27 @@
       function generateProbatorRtpParameters(videoRtpParameters) {
         videoRtpParameters = utils.clone(videoRtpParameters);
         validateAndNormalizeRtpParameters(videoRtpParameters);
-        const rtpParameters = {
+        const rtpParameters2 = {
           mid: RTP_PROBATOR_MID,
           codecs: [],
           headerExtensions: [],
           encodings: [{ ssrc: RTP_PROBATOR_SSRC }],
           rtcp: { cname: "probator" }
         };
-        rtpParameters.codecs.push(videoRtpParameters.codecs[0]);
-        rtpParameters.codecs[0].payloadType = RTP_PROBATOR_CODEC_PAYLOAD_TYPE;
-        rtpParameters.headerExtensions = videoRtpParameters.headerExtensions;
-        return rtpParameters;
+        rtpParameters2.codecs.push(videoRtpParameters.codecs[0]);
+        rtpParameters2.codecs[0].payloadType = RTP_PROBATOR_CODEC_PAYLOAD_TYPE;
+        rtpParameters2.headerExtensions = videoRtpParameters.headerExtensions;
+        return rtpParameters2;
       }
-      function canSend(kind, rtpCapabilities) {
-        return (rtpCapabilities.codecs ?? []).some((codec) => codec.kind === kind);
+      function canSend(kind2, rtpCapabilities) {
+        return (rtpCapabilities.codecs ?? []).some((codec) => codec.kind === kind2);
       }
-      function canReceive(rtpParameters, rtpCapabilities) {
-        validateAndNormalizeRtpParameters(rtpParameters);
-        if (rtpParameters.codecs.length === 0) {
+      function canReceive(rtpParameters2, rtpCapabilities) {
+        validateAndNormalizeRtpParameters(rtpParameters2);
+        if (rtpParameters2.codecs.length === 0) {
           return false;
         }
-        const firstMediaCodec = rtpParameters.codecs[0];
+        const firstMediaCodec = rtpParameters2.codecs[0];
         return (rtpCapabilities.codecs ?? []).some((codec) => codec.preferredPayloadType === firstMediaCodec.payloadType);
       }
       function validateAndNormalizeRtpCodecCapability(codec) {
@@ -2466,8 +2466,8 @@
         if (typeof codec.clockRate !== "number") {
           throw new TypeError("missing codec.clockRate");
         }
-        const kind = mimeTypeMatch[1].toLowerCase();
-        if (kind === "audio") {
+        const kind2 = mimeTypeMatch[1].toLowerCase();
+        if (kind2 === "audio") {
           if (typeof codec.channels !== "number") {
             codec.channels = 1;
           }
@@ -3426,15 +3426,15 @@
         _appData;
         // Observer instance.
         _observer = new enhancedEvents_1.EnhancedEventEmitter();
-        constructor({ id, localId, rtpSender, track, rtpParameters, stopTracks, disableTrackOnPause, zeroRtpOnPause, appData }) {
+        constructor({ id: id2, localId, rtpSender, track, rtpParameters: rtpParameters2, stopTracks, disableTrackOnPause, zeroRtpOnPause, appData }) {
           super();
           logger.debug("constructor()");
-          this._id = id;
+          this._id = id2;
           this._localId = localId;
           this._rtpSender = rtpSender;
           this._track = track;
           this._kind = track.kind;
-          this._rtpParameters = rtpParameters;
+          this._rtpParameters = rtpParameters2;
           this._paused = disableTrackOnPause ? !track.enabled : false;
           this._maxSpatialLayer = void 0;
           this._stopTracks = stopTracks;
@@ -3719,15 +3719,15 @@
         _appData;
         // Observer instance.
         _observer = new enhancedEvents_1.EnhancedEventEmitter();
-        constructor({ id, localId, producerId, rtpReceiver, track, rtpParameters, appData }) {
+        constructor({ id: id2, localId, producerId: producerId2, rtpReceiver, track, rtpParameters: rtpParameters2, appData }) {
           super();
           logger.debug("constructor()");
-          this._id = id;
+          this._id = id2;
           this._localId = localId;
-          this._producerId = producerId;
+          this._producerId = producerId2;
           this._rtpReceiver = rtpReceiver;
           this._track = track;
-          this._rtpParameters = rtpParameters;
+          this._rtpParameters = rtpParameters2;
           this._paused = !track.enabled;
           this._appData = appData ?? {};
           this.onTrackEnded = this.onTrackEnded.bind(this);
@@ -3920,10 +3920,10 @@
         _appData;
         // Observer instance.
         _observer = new enhancedEvents_1.EnhancedEventEmitter();
-        constructor({ id, dataChannel, sctpStreamParameters, appData }) {
+        constructor({ id: id2, dataChannel, sctpStreamParameters, appData }) {
           super();
           logger.debug("constructor()");
-          this._id = id;
+          this._id = id2;
           this._dataChannel = dataChannel;
           this._sctpStreamParameters = sctpStreamParameters;
           this._appData = appData ?? {};
@@ -4111,10 +4111,10 @@
         _appData;
         // Observer instance.
         _observer = new enhancedEvents_1.EnhancedEventEmitter();
-        constructor({ id, dataProducerId, dataChannel, sctpStreamParameters, appData }) {
+        constructor({ id: id2, dataProducerId, dataChannel, sctpStreamParameters, appData }) {
           super();
           logger.debug("constructor()");
-          this._id = id;
+          this._id = id2;
           this._dataProducerId = dataProducerId;
           this._dataChannel = dataChannel;
           this._sctpStreamParameters = sctpStreamParameters;
@@ -4345,10 +4345,10 @@
         _consumerCloseInProgress = false;
         // Observer instance.
         _observer = new enhancedEvents_1.EnhancedEventEmitter();
-        constructor({ direction, id, iceParameters, iceCandidates, dtlsParameters, sctpParameters, iceServers, iceTransportPolicy, additionalSettings, appData, handlerFactory, getSendExtendedRtpCapabilities, recvRtpCapabilities, canProduceByKind }) {
+        constructor({ direction, id: id2, iceParameters, iceCandidates, dtlsParameters, sctpParameters, iceServers, iceTransportPolicy, additionalSettings, appData, handlerFactory, getSendExtendedRtpCapabilities, recvRtpCapabilities, canProduceByKind }) {
           super();
-          logger.debug("constructor() [id:%s, direction:%s]", id, direction);
-          this._id = id;
+          logger.debug("constructor() [id:%s, direction:%s]", id2, direction);
+          this._id = id2;
           this._direction = direction;
           this._getSendExtendedRtpCapabilities = getSendExtendedRtpCapabilities;
           this._recvRtpCapabilities = recvRtpCapabilities;
@@ -4436,8 +4436,8 @@
           this._awaitQueue.stop();
           this._handler.close();
           this._connectionState = "closed";
-          for (const producer of this._producers.values()) {
-            producer.transportClosed();
+          for (const producer2 of this._producers.values()) {
+            producer2.transportClosed();
           }
           this._producers.clear();
           for (const consumer of this._consumers.values()) {
@@ -4554,7 +4554,7 @@
                 return normalizedEncoding;
               });
             }
-            const { localId, rtpParameters, rtpSender } = await this._handler.send({
+            const { localId, rtpParameters: rtpParameters2, rtpSender } = await this._handler.send({
               track,
               streamId,
               encodings: normalizedEncodings,
@@ -4564,29 +4564,29 @@
               onRtpSender
             });
             try {
-              ortc.validateAndNormalizeRtpParameters(rtpParameters);
-              const { id } = await new Promise((resolve, reject) => {
+              ortc.validateAndNormalizeRtpParameters(rtpParameters2);
+              const { id: id2 } = await new Promise((resolve, reject) => {
                 this.safeEmit("produce", {
                   kind: track.kind,
-                  rtpParameters,
+                  rtpParameters: rtpParameters2,
                   appData
                 }, resolve, reject);
               });
-              const producer = new Producer_1.Producer({
-                id,
+              const producer2 = new Producer_1.Producer({
+                id: id2,
                 localId,
                 rtpSender,
                 track,
-                rtpParameters,
+                rtpParameters: rtpParameters2,
                 stopTracks,
                 disableTrackOnPause,
                 zeroRtpOnPause,
                 appData
               });
-              this._producers.set(producer.id, producer);
-              this.handleProducer(producer);
-              this._observer.safeEmit("newproducer", producer);
-              return producer;
+              this._producers.set(producer2.id, producer2);
+              this.handleProducer(producer2);
+              this._observer.safeEmit("newproducer", producer2);
+              return producer2;
             } catch (error) {
               this._handler.stopSending(localId).catch(() => {
               });
@@ -4605,32 +4605,32 @@
         /**
          * Create a Consumer to consume a remote Producer.
          */
-        async consume({ id, producerId, kind, rtpParameters, streamId, onRtpReceiver, appData = {} }) {
+        async consume({ id: id2, producerId: producerId2, kind: kind2, rtpParameters: rtpParameters2, streamId, onRtpReceiver, appData = {} }) {
           logger.debug("consume()");
           if (this._closed) {
             throw new errors_1.InvalidStateError("closed");
           } else if (this._direction !== "recv") {
             throw new errors_1.UnsupportedError("not a receiving Transport");
-          } else if (typeof id !== "string") {
+          } else if (typeof id2 !== "string") {
             throw new TypeError("missing id");
-          } else if (typeof producerId !== "string") {
+          } else if (typeof producerId2 !== "string") {
             throw new TypeError("missing producerId");
-          } else if (kind !== "audio" && kind !== "video") {
-            throw new TypeError(`invalid kind '${kind}'`);
+          } else if (kind2 !== "audio" && kind2 !== "video") {
+            throw new TypeError(`invalid kind '${kind2}'`);
           } else if (this.listenerCount("connect") === 0 && this._connectionState === "new") {
             throw new TypeError('no "connect" listener set into this transport');
           } else if (appData && typeof appData !== "object") {
             throw new TypeError("if given, appData must be an object");
           }
-          const clonedRtpParameters = utils.clone(rtpParameters);
+          const clonedRtpParameters = utils.clone(rtpParameters2);
           const canConsume = ortc.canReceive(clonedRtpParameters, this._recvRtpCapabilities);
           if (!canConsume) {
             throw new errors_1.UnsupportedError("cannot consume this Producer");
           }
           const consumerCreationTask = new ConsumerCreationTask({
-            id,
-            producerId,
-            kind,
+            id: id2,
+            producerId: producerId2,
+            kind: kind2,
             rtpParameters: clonedRtpParameters,
             streamId,
             onRtpReceiver,
@@ -4677,7 +4677,7 @@
               protocol
             });
             ortc.validateAndNormalizeSctpStreamParameters(sctpStreamParameters);
-            const { id } = await new Promise((resolve, reject) => {
+            const { id: id2 } = await new Promise((resolve, reject) => {
               this.safeEmit("producedata", {
                 sctpStreamParameters,
                 label,
@@ -4686,7 +4686,7 @@
               }, resolve, reject);
             });
             const dataProducer = new DataProducer_1.DataProducer({
-              id,
+              id: id2,
               dataChannel,
               sctpStreamParameters,
               appData
@@ -4700,7 +4700,7 @@
         /**
          * Create a DataConsumer
          */
-        async consumeData({ id, dataProducerId, sctpStreamParameters, label = "", protocol = "", appData = {} }) {
+        async consumeData({ id: id2, dataProducerId, sctpStreamParameters, label = "", protocol = "", appData = {} }) {
           logger.debug("consumeData()");
           if (this._closed) {
             throw new errors_1.InvalidStateError("closed");
@@ -4708,7 +4708,7 @@
             throw new errors_1.UnsupportedError("not a receiving Transport");
           } else if (!this._maxSctpMessageSize) {
             throw new errors_1.UnsupportedError("SCTP not enabled by remote Transport");
-          } else if (typeof id !== "string") {
+          } else if (typeof id2 !== "string") {
             throw new TypeError("missing id");
           } else if (typeof dataProducerId !== "string") {
             throw new TypeError("missing dataProducerId");
@@ -4726,7 +4726,7 @@
               protocol
             });
             const dataConsumer = new DataConsumer_1.DataConsumer({
-              id,
+              id: id2,
               dataProducerId,
               dataChannel,
               sctpStreamParameters: clonedSctpStreamParameters,
@@ -4751,11 +4751,11 @@
             let videoConsumerForProbator = void 0;
             const optionsList = [];
             for (const task of pendingConsumerTasks) {
-              const { id, kind, rtpParameters, streamId, onRtpReceiver } = task.consumerOptions;
+              const { id: id2, kind: kind2, rtpParameters: rtpParameters2, streamId, onRtpReceiver } = task.consumerOptions;
               optionsList.push({
-                trackId: id,
-                kind,
-                rtpParameters,
+                trackId: id2,
+                kind: kind2,
+                rtpParameters: rtpParameters2,
                 streamId,
                 onRtpReceiver
               });
@@ -4765,20 +4765,20 @@
               for (let idx = 0; idx < results.length; ++idx) {
                 const task = pendingConsumerTasks[idx];
                 const result = results[idx];
-                const { id, producerId, kind, rtpParameters, appData } = task.consumerOptions;
+                const { id: id2, producerId: producerId2, kind: kind2, rtpParameters: rtpParameters2, appData } = task.consumerOptions;
                 const { localId, rtpReceiver, track } = result;
                 const consumer = new Consumer_1.Consumer({
-                  id,
+                  id: id2,
                   localId,
-                  producerId,
+                  producerId: producerId2,
                   rtpReceiver,
                   track,
-                  rtpParameters,
+                  rtpParameters: rtpParameters2,
                   appData
                 });
                 this._consumers.set(consumer.id, consumer);
                 this.handleConsumer(consumer);
-                if (!this._probatorConsumerCreated && !videoConsumerForProbator && kind === "video") {
+                if (!this._probatorConsumerCreated && !videoConsumerForProbator && kind2 === "video") {
                   videoConsumerForProbator = consumer;
                 }
                 this._observer.safeEmit("newconsumer", consumer);
@@ -4915,34 +4915,34 @@
             }
           });
         }
-        handleProducer(producer) {
-          producer.on("@close", () => {
-            this._producers.delete(producer.id);
+        handleProducer(producer2) {
+          producer2.on("@close", () => {
+            this._producers.delete(producer2.id);
             if (this._closed) {
               return;
             }
-            this._awaitQueue.push(async () => await this._handler.stopSending(producer.localId), "producer @close event").catch((error) => logger.warn("producer.close() failed:%o", error));
+            this._awaitQueue.push(async () => await this._handler.stopSending(producer2.localId), "producer @close event").catch((error) => logger.warn("producer.close() failed:%o", error));
           });
-          producer.on("@pause", (callback, errback) => {
-            this._awaitQueue.push(async () => await this._handler.pauseSending(producer.localId), "producer @pause event").then(callback).catch(errback);
+          producer2.on("@pause", (callback, errback) => {
+            this._awaitQueue.push(async () => await this._handler.pauseSending(producer2.localId), "producer @pause event").then(callback).catch(errback);
           });
-          producer.on("@resume", (callback, errback) => {
-            this._awaitQueue.push(async () => await this._handler.resumeSending(producer.localId), "producer @resume event").then(callback).catch(errback);
+          producer2.on("@resume", (callback, errback) => {
+            this._awaitQueue.push(async () => await this._handler.resumeSending(producer2.localId), "producer @resume event").then(callback).catch(errback);
           });
-          producer.on("@replacetrack", (track, callback, errback) => {
-            this._awaitQueue.push(async () => await this._handler.replaceTrack(producer.localId, track), "producer @replacetrack event").then(callback).catch(errback);
+          producer2.on("@replacetrack", (track, callback, errback) => {
+            this._awaitQueue.push(async () => await this._handler.replaceTrack(producer2.localId, track), "producer @replacetrack event").then(callback).catch(errback);
           });
-          producer.on("@setmaxspatiallayer", (spatialLayer, callback, errback) => {
-            this._awaitQueue.push(async () => await this._handler.setMaxSpatialLayer(producer.localId, spatialLayer), "producer @setmaxspatiallayer event").then(callback).catch(errback);
+          producer2.on("@setmaxspatiallayer", (spatialLayer, callback, errback) => {
+            this._awaitQueue.push(async () => await this._handler.setMaxSpatialLayer(producer2.localId, spatialLayer), "producer @setmaxspatiallayer event").then(callback).catch(errback);
           });
-          producer.on("@setrtpencodingparameters", (params, callback, errback) => {
-            this._awaitQueue.push(async () => await this._handler.setRtpEncodingParameters(producer.localId, params), "producer @setrtpencodingparameters event").then(callback).catch(errback);
+          producer2.on("@setrtpencodingparameters", (params, callback, errback) => {
+            this._awaitQueue.push(async () => await this._handler.setRtpEncodingParameters(producer2.localId, params), "producer @setrtpencodingparameters event").then(callback).catch(errback);
           });
-          producer.on("@getstats", (callback, errback) => {
+          producer2.on("@getstats", (callback, errback) => {
             if (this._closed) {
               return errback(new errors_1.InvalidStateError("closed"));
             }
-            this._handler.getSenderStats(producer.localId).then(callback).catch(errback);
+            this._handler.getSenderStats(producer2.localId).then(callback).catch(errback);
           });
         }
         handleConsumer(consumer) {
@@ -6038,10 +6038,10 @@
       };
       exports.AnswerMediaSection = AnswerMediaSection;
       var OfferMediaSection = class extends MediaSection {
-        constructor({ iceParameters, iceCandidates, dtlsParameters, sctpParameters, plainRtpParameters, mid, kind, offerRtpParameters, streamId, trackId }) {
+        constructor({ iceParameters, iceCandidates, dtlsParameters, sctpParameters, plainRtpParameters, mid, kind: kind2, offerRtpParameters, streamId, trackId }) {
           super({ iceParameters, iceCandidates, dtlsParameters });
           this._mediaObject.mid = String(mid);
-          this._mediaObject.type = kind;
+          this._mediaObject.type = kind2;
           if (!plainRtpParameters) {
             this._mediaObject.connection = { ip: "127.0.0.1", version: 4 };
             if (!sctpParameters) {
@@ -6059,7 +6059,7 @@
             this._mediaObject.port = plainRtpParameters.port;
           }
           this._mediaObject.extmapAllowMixed = "extmap-allow-mixed";
-          switch (kind) {
+          switch (kind2) {
             case "audio":
             case "video": {
               this._mediaObject.direction = "sendonly";
@@ -6289,7 +6289,7 @@
             this.replaceMediaSection(mediaSection);
           }
         }
-        receive({ mid, kind, offerRtpParameters, streamId, trackId }) {
+        receive({ mid, kind: kind2, offerRtpParameters, streamId, trackId }) {
           this.setSessionExtmapAllowMixed();
           const mediaSection = new MediaSection_1.OfferMediaSection({
             iceParameters: this._iceParameters,
@@ -6297,7 +6297,7 @@
             dtlsParameters: this._dtlsParameters,
             plainRtpParameters: this._plainRtpParameters,
             mid,
-            kind,
+            kind: kind2,
             offerRtpParameters,
             streamId,
             trackId
@@ -6438,8 +6438,8 @@
         const codecsMap = /* @__PURE__ */ new Map();
         const headerExtensionMap = /* @__PURE__ */ new Map();
         for (const m of sdpObject.media) {
-          const kind = m.type;
-          switch (kind) {
+          const kind2 = m.type;
+          switch (kind2) {
             case "audio":
             case "video": {
               break;
@@ -6450,8 +6450,8 @@
           }
           for (const rtp of m.rtp) {
             const codec = {
-              kind,
-              mimeType: `${kind}/${rtp.codec}`,
+              kind: kind2,
+              mimeType: `${kind2}/${rtp.codec}`,
               preferredPayloadType: rtp.payload,
               clockRate: rtp.rate,
               channels: rtp.encoding,
@@ -6487,7 +6487,7 @@
               codec.rtcpFeedback.push(feedback);
             } else {
               for (const codec of codecsMap.values()) {
-                if (codec.kind === kind && !/.+\/rtx$/i.test(codec.mimeType)) {
+                if (codec.kind === kind2 && !/.+\/rtx$/i.test(codec.mimeType)) {
                   codec.rtcpFeedback.push(feedback);
                 }
               }
@@ -6498,7 +6498,7 @@
               continue;
             }
             const headerExtension = {
-              kind,
+              kind: kind2,
               uri: ext.uri,
               preferredId: ext.value
             };
@@ -7278,16 +7278,16 @@
           const results = [];
           const mapLocalId = /* @__PURE__ */ new Map();
           for (const options of optionsList) {
-            const { trackId, kind, rtpParameters, streamId } = options;
-            logger.debug("receive() [trackId:%s, kind:%s]", trackId, kind);
-            const localId = rtpParameters.mid ?? String(this._mapMidTransceiver.size);
+            const { trackId, kind: kind2, rtpParameters: rtpParameters2, streamId } = options;
+            logger.debug("receive() [trackId:%s, kind:%s]", trackId, kind2);
+            const localId = rtpParameters2.mid ?? String(this._mapMidTransceiver.size);
             mapLocalId.set(trackId, localId);
-            const { msidStreamId } = ortcUtils.getMsidStreamIdAndTrackId(rtpParameters.msid);
+            const { msidStreamId } = ortcUtils.getMsidStreamIdAndTrackId(rtpParameters2.msid);
             this._remoteSdp.receive({
               mid: localId,
-              kind,
-              offerRtpParameters: rtpParameters,
-              streamId: streamId ?? msidStreamId ?? rtpParameters.rtcp?.cname ?? "-",
+              kind: kind2,
+              offerRtpParameters: rtpParameters2,
+              streamId: streamId ?? msidStreamId ?? rtpParameters2.rtcp?.cname ?? "-",
               trackId
             });
           }
@@ -7311,11 +7311,11 @@
           let answer = await this._pc.createAnswer();
           const localSdpObject = sdpTransform.parse(answer.sdp);
           for (const options of optionsList) {
-            const { trackId, rtpParameters } = options;
+            const { trackId, rtpParameters: rtpParameters2 } = options;
             const localId = mapLocalId.get(trackId);
             const answerMediaObject = localSdpObject.media.find((m) => String(m.mid) === localId);
             sdpCommonUtils.applyCodecParameters({
-              offerRtpParameters: rtpParameters,
+              offerRtpParameters: rtpParameters2,
               answerMediaObject
             });
           }
@@ -8037,16 +8037,16 @@
           const results = [];
           const mapLocalId = /* @__PURE__ */ new Map();
           for (const options of optionsList) {
-            const { trackId, kind, rtpParameters, streamId } = options;
-            logger.debug("receive() [trackId:%s, kind:%s]", trackId, kind);
-            const localId = rtpParameters.mid ?? String(this._mapMidTransceiver.size);
+            const { trackId, kind: kind2, rtpParameters: rtpParameters2, streamId } = options;
+            logger.debug("receive() [trackId:%s, kind:%s]", trackId, kind2);
+            const localId = rtpParameters2.mid ?? String(this._mapMidTransceiver.size);
             mapLocalId.set(trackId, localId);
-            const { msidStreamId } = ortcUtils.getMsidStreamIdAndTrackId(rtpParameters.msid);
+            const { msidStreamId } = ortcUtils.getMsidStreamIdAndTrackId(rtpParameters2.msid);
             this._remoteSdp.receive({
               mid: localId,
-              kind,
-              offerRtpParameters: rtpParameters,
-              streamId: streamId ?? msidStreamId ?? rtpParameters.rtcp?.cname ?? "-",
+              kind: kind2,
+              offerRtpParameters: rtpParameters2,
+              streamId: streamId ?? msidStreamId ?? rtpParameters2.rtcp?.cname ?? "-",
               trackId
             });
           }
@@ -8059,11 +8059,11 @@
           let answer = await this._pc.createAnswer();
           const localSdpObject = sdpTransform.parse(answer.sdp);
           for (const options of optionsList) {
-            const { trackId, rtpParameters } = options;
+            const { trackId, rtpParameters: rtpParameters2 } = options;
             const localId = mapLocalId.get(trackId);
             const answerMediaObject = localSdpObject.media.find((m) => String(m.mid) === localId);
             sdpCommonUtils.applyCodecParameters({
-              offerRtpParameters: rtpParameters,
+              offerRtpParameters: rtpParameters2,
               answerMediaObject
             });
           }
@@ -8751,16 +8751,16 @@
           const results = [];
           const mapLocalId = /* @__PURE__ */ new Map();
           for (const options of optionsList) {
-            const { trackId, kind, rtpParameters, streamId } = options;
-            logger.debug("receive() [trackId:%s, kind:%s]", trackId, kind);
-            const localId = rtpParameters.mid ?? String(this._mapMidTransceiver.size);
+            const { trackId, kind: kind2, rtpParameters: rtpParameters2, streamId } = options;
+            logger.debug("receive() [trackId:%s, kind:%s]", trackId, kind2);
+            const localId = rtpParameters2.mid ?? String(this._mapMidTransceiver.size);
             mapLocalId.set(trackId, localId);
-            const { msidStreamId } = ortcUtils.getMsidStreamIdAndTrackId(rtpParameters.msid);
+            const { msidStreamId } = ortcUtils.getMsidStreamIdAndTrackId(rtpParameters2.msid);
             this._remoteSdp.receive({
               mid: localId,
-              kind,
-              offerRtpParameters: rtpParameters,
-              streamId: streamId ?? msidStreamId ?? rtpParameters.rtcp?.cname ?? "-",
+              kind: kind2,
+              offerRtpParameters: rtpParameters2,
+              streamId: streamId ?? msidStreamId ?? rtpParameters2.rtcp?.cname ?? "-",
               trackId
             });
           }
@@ -8784,11 +8784,11 @@
           let answer = await this._pc.createAnswer();
           const localSdpObject = sdpTransform.parse(answer.sdp);
           for (const options of optionsList) {
-            const { trackId, rtpParameters } = options;
+            const { trackId, rtpParameters: rtpParameters2 } = options;
             const localId = mapLocalId.get(trackId);
             const answerMediaObject = localSdpObject.media.find((m) => String(m.mid) === localId);
             sdpCommonUtils.applyCodecParameters({
-              offerRtpParameters: rtpParameters,
+              offerRtpParameters: rtpParameters2,
               answerMediaObject
             });
             answer = {
@@ -9496,16 +9496,16 @@
           const results = [];
           const mapLocalId = /* @__PURE__ */ new Map();
           for (const options of optionsList) {
-            const { trackId, kind, rtpParameters, streamId } = options;
-            logger.debug("receive() [trackId:%s, kind:%s]", trackId, kind);
-            const localId = rtpParameters.mid ?? String(this._mapMidTransceiver.size);
+            const { trackId, kind: kind2, rtpParameters: rtpParameters2, streamId } = options;
+            logger.debug("receive() [trackId:%s, kind:%s]", trackId, kind2);
+            const localId = rtpParameters2.mid ?? String(this._mapMidTransceiver.size);
             mapLocalId.set(trackId, localId);
-            const { msidStreamId } = ortcUtils.getMsidStreamIdAndTrackId(rtpParameters.msid);
+            const { msidStreamId } = ortcUtils.getMsidStreamIdAndTrackId(rtpParameters2.msid);
             this._remoteSdp.receive({
               mid: localId,
-              kind,
-              offerRtpParameters: rtpParameters,
-              streamId: streamId ?? msidStreamId ?? rtpParameters.rtcp?.cname ?? "-",
+              kind: kind2,
+              offerRtpParameters: rtpParameters2,
+              streamId: streamId ?? msidStreamId ?? rtpParameters2.rtcp?.cname ?? "-",
               trackId
             });
           }
@@ -9529,11 +9529,11 @@
           let answer = await this._pc.createAnswer();
           const localSdpObject = sdpTransform.parse(answer.sdp);
           for (const options of optionsList) {
-            const { trackId, rtpParameters } = options;
+            const { trackId, rtpParameters: rtpParameters2 } = options;
             const localId = mapLocalId.get(trackId);
             const answerMediaObject = localSdpObject.media.find((m) => String(m.mid) === localId);
             sdpCommonUtils.applyCodecParameters({
-              offerRtpParameters: rtpParameters,
+              offerRtpParameters: rtpParameters2,
               answerMediaObject
             });
           }
@@ -10268,16 +10268,16 @@
           const results = [];
           const mapLocalId = /* @__PURE__ */ new Map();
           for (const options of optionsList) {
-            const { trackId, kind, rtpParameters, streamId } = options;
-            logger.debug("receive() [trackId:%s, kind:%s]", trackId, kind);
-            const localId = rtpParameters.mid ?? String(this._mapMidTransceiver.size);
+            const { trackId, kind: kind2, rtpParameters: rtpParameters2, streamId } = options;
+            logger.debug("receive() [trackId:%s, kind:%s]", trackId, kind2);
+            const localId = rtpParameters2.mid ?? String(this._mapMidTransceiver.size);
             mapLocalId.set(trackId, localId);
-            const { msidStreamId } = ortcUtils.getMsidStreamIdAndTrackId(rtpParameters.msid);
+            const { msidStreamId } = ortcUtils.getMsidStreamIdAndTrackId(rtpParameters2.msid);
             this._remoteSdp.receive({
               mid: localId,
-              kind,
-              offerRtpParameters: rtpParameters,
-              streamId: streamId ?? msidStreamId ?? rtpParameters.rtcp?.cname ?? "-",
+              kind: kind2,
+              offerRtpParameters: rtpParameters2,
+              streamId: streamId ?? msidStreamId ?? rtpParameters2.rtcp?.cname ?? "-",
               trackId
             });
           }
@@ -10301,11 +10301,11 @@
           let answer = await this._pc.createAnswer();
           const localSdpObject = sdpTransform.parse(answer.sdp);
           for (const options of optionsList) {
-            const { trackId, rtpParameters } = options;
+            const { trackId, rtpParameters: rtpParameters2 } = options;
             const localId = mapLocalId.get(trackId);
             const answerMediaObject = localSdpObject.media.find((m) => String(m.mid) === localId);
             sdpCommonUtils.applyCodecParameters({
-              offerRtpParameters: rtpParameters,
+              offerRtpParameters: rtpParameters2,
               answerMediaObject
             });
           }
@@ -10759,13 +10759,13 @@
          * @throws {InvalidStateError} if not loaded.
          * @throws {TypeError} if wrong arguments.
          */
-        canProduce(kind) {
+        canProduce(kind2) {
           if (!this._loaded) {
             throw new errors_1.InvalidStateError("not loaded");
-          } else if (kind !== "audio" && kind !== "video") {
-            throw new TypeError(`invalid kind "${kind}"`);
+          } else if (kind2 !== "audio" && kind2 !== "video") {
+            throw new TypeError(`invalid kind "${kind2}"`);
           }
-          return this._canProduceByKind[kind];
+          return this._canProduceByKind[kind2];
         }
         /**
          * Creates a Transport for sending media.
@@ -10773,11 +10773,11 @@
          * @throws {InvalidStateError} if not loaded.
          * @throws {TypeError} if wrong arguments.
          */
-        createSendTransport({ id, iceParameters, iceCandidates, dtlsParameters, sctpParameters, iceServers, iceTransportPolicy, additionalSettings, appData }) {
+        createSendTransport({ id: id2, iceParameters, iceCandidates, dtlsParameters, sctpParameters, iceServers, iceTransportPolicy, additionalSettings, appData }) {
           logger.debug("createSendTransport()");
           return this.createTransport({
             direction: "send",
-            id,
+            id: id2,
             iceParameters,
             iceCandidates,
             dtlsParameters,
@@ -10794,11 +10794,11 @@
          * @throws {InvalidStateError} if not loaded.
          * @throws {TypeError} if wrong arguments.
          */
-        createRecvTransport({ id, iceParameters, iceCandidates, dtlsParameters, sctpParameters, iceServers, iceTransportPolicy, additionalSettings, appData }) {
+        createRecvTransport({ id: id2, iceParameters, iceCandidates, dtlsParameters, sctpParameters, iceServers, iceTransportPolicy, additionalSettings, appData }) {
           logger.debug("createRecvTransport()");
           return this.createTransport({
             direction: "recv",
-            id,
+            id: id2,
             iceParameters,
             iceCandidates,
             dtlsParameters,
@@ -10809,10 +10809,10 @@
             appData
           });
         }
-        createTransport({ direction, id, iceParameters, iceCandidates, dtlsParameters, sctpParameters, iceServers, iceTransportPolicy, additionalSettings, appData }) {
+        createTransport({ direction, id: id2, iceParameters, iceCandidates, dtlsParameters, sctpParameters, iceServers, iceTransportPolicy, additionalSettings, appData }) {
           if (!this._loaded) {
             throw new errors_1.InvalidStateError("not loaded");
-          } else if (typeof id !== "string") {
+          } else if (typeof id2 !== "string") {
             throw new TypeError("missing id");
           } else if (typeof iceParameters !== "object") {
             throw new TypeError("missing iceParameters");
@@ -10827,7 +10827,7 @@
           }
           const transport = new Transport_1.Transport({
             direction,
-            id,
+            id: id2,
             iceParameters,
             iceCandidates,
             dtlsParameters,
@@ -11230,10 +11230,10 @@
         // Custom events.
         #onenabledchange = null;
         #onstopped = null;
-        constructor({ kind, id, label, contentHint, enabled, muted, readyState, capabilities, constraints, settings, data }) {
+        constructor({ kind: kind2, id: id2, label, contentHint, enabled, muted, readyState, capabilities, constraints, settings, data }) {
           super();
-          this.#id = id ?? (0, uuid_1.v4)();
-          this.#kind = kind;
+          this.#id = id2 ?? (0, uuid_1.v4)();
+          this.#kind = kind2;
           this.#label = label ?? "";
           this.#contentHint = contentHint ?? "";
           this.#enabled = enabled ?? true;
@@ -11371,9 +11371,9 @@
          * Clones current track into another FakeMediaStreamTrack. `id` and `data`
          * can be optionally given.
          */
-        clone({ id, data } = {}) {
+        clone({ id: id2, data } = {}) {
           return new _FakeMediaStreamTrack({
-            id: id ?? (0, uuid_1.v4)(),
+            id: id2 ?? (0, uuid_1.v4)(),
             kind: this.#kind,
             label: this.#label,
             contentHint: this.#contentHint,
@@ -11697,13 +11697,13 @@
           this.assertNotClosed();
           const results = [];
           for (const options of optionsList) {
-            const { trackId, kind } = options;
+            const { trackId, kind: kind2 } = options;
             if (!this._transportReady) {
               await this.setupTransport({ localDtlsRole: "client" });
             }
-            logger.debug("receive() [trackId:%s, kind:%s]", trackId, kind);
+            logger.debug("receive() [trackId:%s, kind:%s]", trackId, kind2);
             const localId = this._nextLocalId++;
-            const track = new fake_mediastreamtrack_1.FakeMediaStreamTrack({ kind });
+            const track = new fake_mediastreamtrack_1.FakeMediaStreamTrack({ kind: kind2 });
             this._tracks.set(localId, track);
             results.push({ localId: String(localId), track });
           }
@@ -11786,10 +11786,10 @@
         _onmessage = null;
         _onbufferedamountlow = null;
         _onerror = null;
-        constructor({ id, ordered = true, maxPacketLifeTime = null, maxRetransmits = null, label = "", protocol = "" }) {
+        constructor({ id: id2, ordered = true, maxPacketLifeTime = null, maxRetransmits = null, label = "", protocol = "" }) {
           super();
-          logger.debug(`constructor() [id:${id}, ordered:${ordered}, maxPacketLifeTime:${maxPacketLifeTime}, maxRetransmits:${maxRetransmits}, label:${label}, protocol:${protocol}`);
-          this._id = id;
+          logger.debug(`constructor() [id:${id2}, ordered:${ordered}, maxPacketLifeTime:${maxPacketLifeTime}, maxRetransmits:${maxRetransmits}, label:${label}, protocol:${protocol}`);
+          this._id = id2;
           this._ordered = ordered;
           this._maxPacketLifeTime = maxPacketLifeTime;
           this._maxRetransmits = maxRetransmits;
@@ -12384,11 +12384,11 @@
           id: generateFakeUuid()
         });
       }
-      function generateConsumerRemoteParameters({ id, codecMimeType } = {}) {
+      function generateConsumerRemoteParameters({ id: id2, codecMimeType } = {}) {
         switch (codecMimeType) {
           case "audio/opus": {
             return {
-              id: id ?? generateFakeUuid(),
+              id: id2 ?? generateFakeUuid(),
               producerId: generateFakeUuid(),
               kind: "audio",
               rtpParameters: utils.deepFreeze({
@@ -12434,7 +12434,7 @@
           }
           case "audio/ISAC": {
             return {
-              id: id ?? generateFakeUuid(),
+              id: id2 ?? generateFakeUuid(),
               producerId: generateFakeUuid(),
               kind: "audio",
               rtpParameters: utils.deepFreeze({
@@ -12473,7 +12473,7 @@
           }
           case "video/VP8": {
             return {
-              id: id ?? generateFakeUuid(),
+              id: id2 ?? generateFakeUuid(),
               producerId: generateFakeUuid(),
               kind: "video",
               rtpParameters: utils.deepFreeze({
@@ -12543,7 +12543,7 @@
           }
           case "video/H264": {
             return {
-              id: id ?? generateFakeUuid(),
+              id: id2 ?? generateFakeUuid(),
               producerId: generateFakeUuid(),
               kind: "video",
               rtpParameters: utils.deepFreeze({
@@ -12623,9 +12623,9 @@
           id: generateFakeUuid()
         });
       }
-      function generateDataConsumerRemoteParameters({ id } = {}) {
+      function generateDataConsumerRemoteParameters({ id: id2 } = {}) {
         return {
-          id: id ?? generateFakeUuid(),
+          id: id2 ?? generateFakeUuid(),
           dataProducerId: generateFakeUuid(),
           sctpStreamParameters: utils.deepFreeze({
             streamId: 666,
@@ -12857,8 +12857,9 @@
       var textConn;
       var localVideo;
       var remoteVideo;
-      var producer;
+      var consumeTransport;
       var isWebcam = true;
+      var remoteStream;
       var websocketURL = "ws://localhost:8000/ws";
       var socket;
       var device;
@@ -12874,12 +12875,10 @@
         textConn = document.getElementById("conn_status");
         localVideo = document.getElementById("localVideo");
         remoteVideo = document.getElementById("remoteVideo");
-        roomIdInput = document.getElementById("roomId");
-        peerNameInput = document.getElementById("peerName");
         console.log("\u2705 UI elements loaded");
         btnCam.addEventListener("click", publish);
         btnScreen.addEventListener("click", publish);
-        btnSub.addEventListener("click", () => console.log("sub btn clicked"));
+        btnSub.addEventListener("click", subscribe);
       });
       var connect = () => {
         socket = new WebSocket(websocketURL);
@@ -12907,6 +12906,14 @@
             case "producerTransportCreationFailed":
               onProducerTransportCreationFailed(resp.data);
               break;
+            case "consumerTransportCreated":
+              onConsumerTransportCreated(resp);
+              break;
+            case "subscribed":
+              onSubscribed(resp);
+              break;
+            case "resumed":
+              console.log(resp.data, "resumed");
             default:
               console.log(`Unknown message type: ${resp.type}`);
               break;
@@ -12928,7 +12935,7 @@
           console.error("Producer transport creation failed:", event.error);
           return;
         }
-        const transport = device.createSendTransport(event.data);
+        const transport = device.createSendTransport(event);
         transport.on("connect", async ({ dtlsParameters }, callback, errback) => {
           const message = {
             type: "connectProducerTransport",
@@ -12936,17 +12943,27 @@
           };
           const resp = JSON.stringify(message);
           socket.send(resp);
-          socket.addEventListener("producerTransportConnected", (event2) => {
-            callback();
+          socket.addEventListener("message", (event2) => {
+            console.log("Received message for connectProducerTransport:", event2.data);
+            const jsonValidation = IsJsonString(event2.data);
+            if (!jsonValidation) {
+              log.error("Received invalid JSON message");
+              return;
+            }
+            let resp2 = JSON.parse(event2.data);
+            if (resp2.type == "producerTransportConnected") {
+              console.log("Producer transport connected successfully");
+              callback();
+            }
           });
         });
         transport.on(
           "produce",
-          async ({ kind, rtpParameters }, callback, errback) => {
+          async ({ kind: kind2, rtpParameters: rtpParameters2 }, callback, errback) => {
             const message = {
               type: "produce",
-              kind,
-              rtpParameters
+              kind: kind2,
+              rtpParameters: rtpParameters2
             };
             const resp = JSON.stringify(message);
             socket.send(resp);
@@ -12961,7 +12978,6 @@
               textPublish.innerHTML = "Publishing... (connecting)";
               break;
             case "connected":
-              localVideo.srcObject = stream;
               textPublish.innerHTML = "published... (connected)";
               break;
             case "failed":
@@ -12973,8 +12989,12 @@
         let stream;
         try {
           stream = await getUserMedia();
+          localVideo.srcObject = stream;
           const track = stream.getVideoTracks()[0];
           const params = { track };
+          console.log("STREAM:", stream);
+          console.log("TRACKS:", stream.getTracks());
+          await localVideo.play().catch((e) => console.error("Play error:", e));
           producer = await transport.produce(params);
         } catch (error) {
           console.error("Error producing media:", error);
@@ -12983,6 +13003,83 @@
       };
       var onProducerTransportCreationFailed = (event) => {
         console.error("Producer transport creation failed:", event.error);
+      };
+      var onConsumerTransportCreated = (event) => {
+        if (event.error) {
+          console.error("Consumer transport creation failed:", event.error);
+          return;
+        }
+        const transport = device.createRecvTransport(event.data);
+        transport.on("connect", async ({ dtlsParameters }, callback, errback) => {
+          const message = {
+            type: "connectConsumerTransport",
+            dtlsParameters,
+            transportId: transport.id
+          };
+          const resp = JSON.stringify(message);
+          socket.send(resp);
+          socket.addEventListener("message", (event2) => {
+            console.log("Received message for consumer Connected:", event2.data);
+            const jsonValidation = IsJsonString(event2.data);
+            if (!jsonValidation) {
+              log.error("Received invalid JSON message");
+              return;
+            }
+            let resp2 = JSON.parse(event2.data);
+            btnSub.disabled = false;
+            if (resp2.type === "consumerConnected") {
+              console.log("Consumer transport connected successfully");
+              callback();
+            }
+          });
+        });
+        transport.on("connectionstatechange", (state) => {
+          switch (state) {
+            case "connecting":
+              textSubscribe.innerHTML = "Subscribing";
+              break;
+            case "connected":
+              remoteVideo.srcObject = remoteStream;
+              btnSub.disabled = false;
+              const msg = {
+                type: "resume"
+              };
+              const resp = JSON.stringify(msg);
+              socket.send(resp);
+              textSubscribe.innerHTML = "subscribed";
+              break;
+            case "failed":
+              transport.close();
+              textSubscribe.innerHTML = "failed";
+              btnSub.disabled = false;
+              break;
+          }
+        });
+        consumeTransport = transport;
+        const stream = consume(transport);
+      };
+      var consume = async (transport) => {
+        const { rtpCapabilities } = device;
+        const msg = {
+          type: "consume",
+          rtpCapabilities
+        };
+        const message = JSON.stringify(msg);
+        socket.send(message);
+      };
+      var onSubscribed = async (event) => {
+        const data = { producerId, id, kind, rtpParameters } = event.data;
+        let codecOptions = {};
+        const consumer = await consumeTransport.consume({
+          id,
+          producerId,
+          kind,
+          rtpParameters,
+          codecOptions
+        });
+        const stream = new MediaStream();
+        stream.addTrack(consumer.track);
+        remoteStream = stream;
       };
       var loadDevice = async (routerRtpCapabilities) => {
         try {
@@ -13007,6 +13104,16 @@
         const resp = JSON.stringify(message);
         socket.send(resp);
       };
+      var subscribe = () => {
+        btnSub.disabled = true;
+        const msg = {
+          type: "createConsumerTransport",
+          forceTcp: false
+          // rtpCapabilities: device.rtpCapabilities,
+        };
+        const resp = JSON.stringify(msg);
+        socket.send(resp);
+      };
       var IsJsonString = (str) => {
         try {
           JSON.parse(str);
@@ -13024,10 +13131,10 @@
         try {
           stream = isWebcam ? await navigator.mediaDevices.getUserMedia({
             video: true,
-            audio: true
+            audio: false
           }) : await navigator.mediaDevices.getDisplayMedia({
             video: true,
-            audio: true
+            audio: false
           });
         } catch (error) {
           console.error("Error accessing media devices:", error);
