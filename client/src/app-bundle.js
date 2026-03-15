@@ -12913,6 +12913,12 @@
               onSubscribed(resp);
               break;
             case "resumed":
+            case "produced":
+              if (pendingProduceCallback) {
+                pendingProduceCallback({ id: resp.data.id });
+                pendingProduceCallback = null;
+              }
+              break;
               console.log(resp.data, "resumed");
             default:
               console.log(`Unknown message type: ${resp.type}`);
@@ -12957,19 +12963,22 @@
             }
           });
         });
+        let pendingProduceCallback2 = null;
         transport.on(
           "produce",
           async ({ kind: kind2, rtpParameters: rtpParameters2 }, callback, errback) => {
-            const message = {
-              type: "produce",
-              kind: kind2,
-              rtpParameters: rtpParameters2
-            };
-            const resp = JSON.stringify(message);
-            socket.send(resp);
-            socket.addEventListener("produced", (event2) => {
-              callback(resp.data.id);
-            });
+            try {
+              pendingProduceCallback2 = callback;
+              socket.send(
+                JSON.stringify({
+                  type: "produce",
+                  kind: kind2,
+                  rtpParameters: rtpParameters2
+                })
+              );
+            } catch (error) {
+              errback(error);
+            }
           }
         );
         transport.on("connectionstatechange", (state) => {

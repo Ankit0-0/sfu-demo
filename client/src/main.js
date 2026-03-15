@@ -89,6 +89,12 @@ const connect = () => {
         onSubscribed(resp);
         break;
       case "resumed":
+      case "produced":
+        if (pendingProduceCallback) {
+          pendingProduceCallback({ id: resp.data.id });
+          pendingProduceCallback = null;
+        }
+        break;
         console.log(resp.data, "resumed");
       default:
         console.log(`Unknown message type: ${resp.type}`);
@@ -138,8 +144,9 @@ const onProducerTransportCreated = async (event) => {
       }
 
       let resp = JSON.parse(event.data);
-      
-      if (resp.type == "producerTransportConnected") { // producerConnected
+
+      if (resp.type == "producerTransportConnected") {
+        // producerConnected
         console.log("Producer transport connected successfully");
         callback();
       }
@@ -148,21 +155,24 @@ const onProducerTransportCreated = async (event) => {
   });
 
   // begin transport on producer
+  let pendingProduceCallback = null;
+
   transport.on(
     "produce",
     async ({ kind, rtpParameters }, callback, errback) => {
-      const message = {
-        type: "produce",
-        kind,
-        rtpParameters,
-      };
-      const resp = JSON.stringify(message);
-      socket.send(resp);
+      try {
+        pendingProduceCallback = callback;
 
-      socket.addEventListener("produced", (event) => {
-        // published
-        callback(resp.data.id);
-      });
+        socket.send(
+          JSON.stringify({
+            type: "produce",
+            kind,
+            rtpParameters,
+          }),
+        );
+      } catch (error) {
+        errback(error);
+      }
     },
   );
 
